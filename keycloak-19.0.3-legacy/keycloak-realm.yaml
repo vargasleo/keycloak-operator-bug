@@ -1,0 +1,15 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakRealm
+metadata:
+  namespace: keycloak
+  name: example-realm
+  labels:
+    realm: example-realm
+spec:
+  realm:
+    realm: "example"
+    enabled: true
+    displayName: "Example Realm"
+  instanceSelector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak

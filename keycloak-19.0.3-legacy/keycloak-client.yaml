@@ -1,0 +1,29 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: example-client
+  namespace: keycloak
+spec:
+  realmSelector:
+    matchLabels:
+      realm: example-realm
+  client:
+    clientId: example-permissions
+    publicClient: true
+    enabled: true
+    directAccessGrantsEnabled: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    serviceAccountsEnabled: false
+    fullScopeAllowed: true
+  roles:
+    - name: example_role_1
+    - name: example_role_2
+
+    - name: EXAMPLE_USER
+      clientRole: true
+      composite: true
+      composites:
+        client:
+          example-permissions:
+            - example_role_1

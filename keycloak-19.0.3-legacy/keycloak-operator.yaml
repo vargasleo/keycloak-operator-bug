@@ -1,0 +1,71 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keycloak-operator
+rules:
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["pods", "services", "services/finalizers", "endpoints", "persistentvolumeclaims", "events", "configmaps", "secrets"]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets", "replicasets", "statefulsets"]
+  verbs: ["*"]
+- apiGroups: ["monitoring.coreos.com"]
+  resources: ["servicemonitors"]
+  verbs: ["get", "create"]
+- apiGroups: ["apps"]
+  resourceNames: ["keycloak-operator"]
+  resources: ["deployments/finalizers"]
+  verbs: ["update"]
+- apiGroups: ["keycloak.org"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: keycloak-operator
+subjects:
+- kind: ServiceAccount
+  name: keycloak-operator
+  namespace: keycloak
+roleRef:
+  kind: ClusterRole
+  name: keycloak-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-operator
+  namespace: keycloak
+  labels:
+    name: keycloak-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: keycloak-operator
+  template:
+    metadata:
+      labels:
+        name: keycloak-operator
+    spec:
+      serviceAccountName: keycloak-operator
+      containers:
+        - name: keycloak-operator
+          image: quay.io/keycloak/keycloak-operator:19.0.3-legacy
+          command:
+            - keycloak-operator
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "keycloak-operator"
